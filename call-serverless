@@ -1,0 +1,75 @@
+async function postRequestForQandA(EndPoint, dataObject){
+    const config = new Request(EndPoint, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataObject),
+    });
+    const response = await fetch(config);
+    const responseDataJson = await response.json()
+    return responseDataJson;
+} 
+
+
+
+const fileUpload = async (event) => {
+    var folderId = "49857623460"
+    if (document.querySelector("#stroe_form .hs-input[type=file]").value != '') {
+        for (let i = 0; i < document.querySelector(".hs-input[type=file]").files.length; i++) {
+            let fileData = document.querySelector(".hs-input[type=file]").files[i];      
+            let form = new FormData();
+            form.append("file", fileData);
+            form.append("folderId", folderId);
+            form.append("options",'{\n  "access":  "PUBLIC_INDEXABLE",\n"overwrite": true,\n"duplicateValidationStrategy": "RETURN_EXISTING",\n"duplicateValidationScope": "EXACT_FOLDER"\n}');
+
+            for (let [key, val] of form.entries()) {
+                console.log(key, val);
+            }
+
+
+            let reader = new FileReader();
+            reader.readAsDataURL(fileData)
+            reader.onload = async function() {
+                const object = { 'imgData': reader.result , 'fileName': fileData.name }
+                const postRequest = await postRequestForQandA('/_hcms/api/fileUploadEndPoint', object)
+                console.log("postRequest")
+                const imageURL = postRequest.response.url;
+                
+                console.log(imageURL)
+                let imagePath = document.querySelector("#stroe_form input[name='image_url']");
+                imagePath.value = imageURL;
+                imagePath.dispatchEvent(new Event('input', { 'bubbles': true }));
+            };
+        }
+    }
+}
+
+window.addEventListener("load",async (event) => {
+    const  thumbUpload = document.querySelector("#stroe_form .hs-input[type=file]");
+    thumbUpload.addEventListener('change', function(eve){
+        var ext = thumbUpload.value.split('.').pop().toLowerCase();
+        console.log("ext ", ext)
+
+        if(thumbUpload.value != ''){
+            if($.inArray(ext, ['gif','png','jpg','jpeg','webp']) == -1) {
+                alert("Not an Image...");
+                thumbUpload.value = '';
+            } 
+            else if (this.files[0].size > 1000000) {
+                alert("Image size greater than 1 Mb");
+                thumbUpload.value = '';
+            } 
+            else {
+                if(eve.target.files[0]){
+                    img = new Image();
+                    img.src = window.URL.createObjectURL( eve.target.files[0] )
+                    img.onload = async function() {
+                        let upd = await fileUpload(thumbUpload)
+                    }
+                }
+            }
+        }
+
+    })
+})
