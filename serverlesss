@@ -25,9 +25,9 @@ exports.main = async (context, sendResponse) => {
     let splitResult = fileB64Arr.split(",")[1]
     let buffer = Buffer.from(splitResult, 'base64');
 
-    const file_options = {
-        access: 'PUBLIC_NOT_INDEXABLE',
-        overwrite: false,
+      const file_options = {
+        access: 'PUBLIC_INDEXABLE',
+        overwrite: true,
         duplicateValidationStrategy: 'NONE',
         duplicateValidationScope: 'EXACT_FOLDER'
     };
